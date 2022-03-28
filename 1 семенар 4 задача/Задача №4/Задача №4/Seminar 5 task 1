@@ -1,0 +1,32 @@
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <locale>
+#include <sstream>
+#include <Windows.h> 
+
+int main(int argc, char** argv)
+{
+	std::cout << "Currency conversion: RUB -> DOL" << '\n';
+
+	SetConsoleCP(CP_UTF8);
+	SetConsoleOutputCP(CP_UTF8);
+	
+	
+	std::cout << "Enter a cash account in rubles = ";
+	long double value;
+	std::cin >> std::get_money(value, true);
+	std::cout << "Entered account = ";
+	std::cout.imbue(std::locale("ru_RU.utf8"));
+	std::cout << std::showbase << std::put_money(value, false) << std::endl;
+
+	value = value / 93.71;
+	std::cout << "Conversion to dollars = ";
+	std::cout.imbue(std::locale("en_US.utf8"));
+	std::cout << std::showbase << std::put_money(value, false) << std::endl;
+
+
+	system("pause");
+
+	return EXIT_SUCCESS;
+}
