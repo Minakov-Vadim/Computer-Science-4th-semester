@@ -1,0 +1,97 @@
+#include <iostream>
+#include <algorithm>
+#include <vector>
+
+#include <numeric>
+#include <random>
+#include <chrono>
+
+void Print(std::vector<int> &a, std::string Name) {
+	std::cout << "The "<< Name <<" vector = ";
+	std::copy(std::begin(a), std::end(a),
+		std::ostream_iterator < int >(std::cout, " "));
+	std::cout << '\n';
+}
+
+int main() {
+
+	//1
+	std::vector<int> v(10);
+	std::iota(std::begin(v), std::end(v), 1);
+	//2
+	std::copy(
+		std::istream_iterator < int >(std::cin),
+		std::istream_iterator < int >(),
+		std::back_inserter(v));
+	//3
+	std::default_random_engine dre(static_cast <unsigned int> (0));
+	std::shuffle(std::begin(v), std::end(v), dre);
+	//4
+	std::sort(std::begin(v), std::end(v));
+	v.erase(std::unique(std::begin(v), std::end(v)), std::end(v));
+	//5
+	std::cout << std::count_if(std::begin(v), std::end(v), [](int a) {return (a % 2 != 0) ? true : false;}) << '\n';
+	//6
+	auto result = std::minmax_element(std::begin(v), std::end(v));
+	std::cout << "Min = " << *result.first << " " << "Max = " << *result.second << '\n';
+	//7
+	auto Simple_number = [](auto a)
+	{
+		if (a == 1) {
+			return false;
+		}
+		for (int i = 2; i < a; i++) {
+			if (a % i == 0) {
+				return false;
+			}
+		}
+		return true;
+	};
+	auto itr = std::find_if(std::begin(v), std::end(v), Simple_number);
+	if (itr == std::end(v)) {
+		std::cout << "Simple number NO" << '\n';
+	}
+	else {
+		std::cout << *itr << '\n';
+	}
+	//8
+	std::transform(std::begin(v), std::end(v), std::begin(v), [](int a) { return a * a; });
+	//9
+	std::vector<int> v2(10);
+	std::iota(std::begin(v2), std::end(v2), 20);
+	std::shuffle(std::begin(v2), std::end(v2), dre);
+	//10
+	std::cout << std::accumulate(std::begin(v2), std::end(v2), 0) << '\n';
+	//11
+	std::fill(std::begin(v2), std::begin(v2) + 3, -1);
+	//12
+	std::vector<int> v3(v.size());
+	std::transform(std::begin(v), std::end(v), std::begin(v2), std::begin(v3),
+		[](auto lhs, auto rhs) { return (lhs - rhs); });
+	//13
+	std::transform(std::begin(v3), std::end(v3), std::begin(v3), [](int a) { return (a < 0) ? 0 : a; });
+	//14
+	v3.erase(std::remove_if(std::begin(v3), std::end(v3), [](int a) { return a == 0; }), std::end(v3));
+	//15
+	std::reverse(std::begin(v3), std::end(v3));
+	//16
+	std::partial_sort(std::rbegin(v3), std::rbegin(v3) + 3, std::rend(v3));
+	std::cout << v3[0] << " " << v3[1] << " " << v3[2] << '\n';
+	//17
+	std::sort(std::begin(v), std::end(v));
+	std::sort(std::begin(v2), std::end(v2));
+	//18
+	std::vector<int> v4(v.size() + v2.size());
+	std::merge(std::begin(v), std::end(v), std::begin(v2), std::end(v2), std::begin(v4));
+	//19
+	auto it = std::equal_range(std::begin(v4), std::end(v4), 1);
+	std::cout << "Interval for 1 = [" << *it.first << ";" << *it.second << "]" << '\n';
+	//20
+
+	Print(v, "First");
+	Print(v2, "Second");
+	Print(v3, "Third");
+	Print(v4, "Fourth");
+
+	return 0;
+}
