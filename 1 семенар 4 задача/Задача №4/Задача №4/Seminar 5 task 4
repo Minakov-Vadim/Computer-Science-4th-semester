@@ -1,0 +1,25 @@
+#include <iostream>
+#include <locale>
+#include <string>
+#include <regex>
+
+int main() {
+
+    std::setlocale(LC_ALL, "en_US.UTF-8");
+    std::string str("I came to drink tea at 12:23:11, and then went for a walk at 13:00:00. In the morning at 06:00:00 I returned home.");
+    // HH:MM:SS
+    std::regex rgx("([0-1][0-9]|[2][0-3]):[0-5][0-9]:[0-5][0-9]");
+    std::smatch m;
+
+    std::cout << "The following matches and submatches were found:" << std::endl;
+    while (std::regex_search(str, m, rgx)) {
+        for (auto x : m) {
+            std::cout << x << " ";
+            break;
+        }
+        std::cout << std::endl;
+        str = m.suffix().str();
+    }
+
+    return 0;
+}
