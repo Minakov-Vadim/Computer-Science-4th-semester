@@ -2,27 +2,15 @@
 #include <locale>
 #include <string>
 #include <regex>
+int main(){
 
-int main() {
+    std::string str(" minakof..vadim.@yandex..ru   111111  .minakof.vadim@yandex.ru 111111 minakofvadim@yandex.ru 1111 mina.kof.vadim@yandex.ru 1111 minakof.vadim@yandex.ru ");
+    std::regex rgx(R"([A-Za-z]([A-Za-z0-9-_]\.?)*[A-Za-z0-9]@([A-Za-z]([A-Za-z0-9-_]\.?)*[A-Za-z0-9]))");
     
-    std::setlocale(LC_ALL, "en_US.UTF-16");
-    std::string str("I decided to register in the mail. At first I decided to log in as minakov_2002.vadim@gmail.com , but I was told that such a name already exists. Then I decided to log in as minakof.vadim@yandex.ru. But then I started a new minakov mail minakov.vv@phystech.edu.");
-   
-
-    // Идея вся таже что и в 4 задаче. Кст, вместо [A-Za-z0-9\.] я хотел написать [\w\.] но он не может так ничего
-    //найти, так что пришлость оставить так как есть.
-    // Что бы выводить имена доменов, будем пользоваться ()
-
-    std::regex rgx("[A-Za-z0-9\.-_]*@([A-Za-z0-9\.]*[A-Za-z0-9])");
-    std::smatch m;
-   
     std::cout << "Address domains found:" << std::endl;
-    while (std::regex_search(str, m, rgx)) {
-        for (int i = 0; i < m.size(); i = i + 2) {
-            std::cout << "PORTAL ADDRESS: " << m[i] << " DOMAIN NAME: " << m[i + 1];
-        }
-        std::cout << std::endl;
-        str = m.suffix().str();
+    for (auto i = std::sregex_iterator(std::begin(str), std::end(str), rgx); i != std::sregex_iterator(); std::advance(i, 1))
+    {
+        std::cout << "PORTAL ADDRESS: " << i->str() << "    DOMAIN NAME: " << (*i)[2].str() << std::endl;
     }
         
     return 0;
