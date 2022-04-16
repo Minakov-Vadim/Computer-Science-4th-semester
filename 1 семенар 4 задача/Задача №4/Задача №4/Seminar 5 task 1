@@ -7,6 +7,7 @@
 
 int main(int argc, char** argv)
 {
+	const auto c = 93.71;
 	std::cout << "Currency conversion: RUB -> DOL" << '\n';
 
 	SetConsoleCP(CP_UTF8);
@@ -15,15 +16,16 @@ int main(int argc, char** argv)
 	
 	std::cout << "Enter a cash account in rubles = ";
 	long double value;
-	std::cin >> std::get_money(value, true);
+	std::cin.imbue(std::locale("en_US.UTF-8"));
+	std::cin >> std::get_money(value);
 	std::cout << "Entered account = ";
 	std::cout.imbue(std::locale("ru_RU.utf8"));
-	std::cout << std::showbase << std::put_money(value, false) << std::endl;
+	std::cout << std::showbase << std::put_money(value) << std::endl;
 
-	value = value / 93.71;
+	value = value / c;
 	std::cout << "Conversion to dollars = ";
 	std::cout.imbue(std::locale("en_US.utf8"));
-	std::cout << std::showbase << std::put_money(value, false) << std::endl;
+	std::cout << std::showbase << std::put_money(value) << std::endl;
 
 
 	system("pause");
