@@ -1,29 +1,73 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
-
 #include <numeric>
 #include <random>
 #include <chrono>
 #include <future>
 #include <thread>
 
+
+class Timer
+{
+public:
+	using clock_t = std::chrono::steady_clock;
+	using time_point_t = clock_t::time_point;
+	explicit Timer() : m_begin(clock_t::now()), m_flag(false), m_doub(0.0) {}
+	~Timer() noexcept
+	{
+		try
+		{
+			pause();
+		}
+		catch (...)
+		{
+			std::cerr << "You have a mistake" << std::endl;
+		}
+	}
+	void pause()
+	{
+		if (m_flag)
+		{
+			m_doub = std::chrono::duration_cast<std::chrono::microseconds>(clock_t::now() - m_begin).count();
+			m_flag = false;
+		}
+	}
+	void start()
+	{
+		if (m_flag == false)
+		{
+			m_doub = 0.0;
+			m_flag = true;
+			m_begin = clock_t::now();
+		}
+	}
+
+	double getter_doub() const noexcept
+	{
+		return m_doub;
+	}
+
+private:
+	time_point_t m_begin;
+	bool m_flag;
+	double m_doub;
+};
+
+
 bool A_point_in_a_circle(int x, int y, int R) {
-	return (x * x + y * y <= R*R) ? true : false;
+	return x * x + y * y <= R*R;
 }
 
-int Number_of_points_in_the_circle(int n, int R) {
+int Number_of_points_in_the_circle(int n) {
+	const int R = 5000;
 	auto seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine dre(static_cast <unsigned int> (seed));
-	// Круг и квадрат нарисуем в центре координат.
-	// Будем рассматривать четверти фигур (1-я четверть).
-	// P(точка в кругу) = S_круга/S_квадрата = pi*R^2/4R^2 = pi/4 = N_точек в круге/n => pi = 4*(N_точек в круге/n)  
 	std::uniform_int_distribution <> uid(0, R);
-	int x, y, N_point_in_a_circle = 0;
+	int N_point_in_a_circle = 0;
 	for (int i = 0; i < n; ++i) {
-		x = uid(dre);
-		y = uid(dre);
-		(A_point_in_a_circle(x, y, R)) ? N_point_in_a_circle++ : N_point_in_a_circle = N_point_in_a_circle;
+		if (A_point_in_a_circle(uid(dre), uid(dre), R))
+			N_point_in_a_circle++;
 	}
 	return (N_point_in_a_circle);
 }
@@ -31,30 +75,33 @@ int Number_of_points_in_the_circle(int n, int R) {
 
 int main(){
 	
-	const int R = 5000;
-	const int n = 100000000;
-	int N_point_in_a_circle = Number_of_points_in_the_circle(n, R);
-	std::cout << 4*static_cast<double>(N_point_in_a_circle)/n << '\n' << '\n' << '\n';
+	Timer t;
+	int n = 100000000;
 	
-	
-	N_point_in_a_circle = 0;
-	const std::size_t Number_of_threads = std::thread::hardware_concurrency() != 0 ? std::thread::hardware_concurrency() - 1 : 1;
-	std::vector<std::thread> threads;
-	std::vector < std::future < double > > futures;
-	for (unsigned int i = 0; i < Number_of_threads; ++i)
-	{
-		std::packaged_task<double(std::size_t, std::size_t)> task{Number_of_points_in_the_circle};
-		futures.push_back(task.get_future());
-		threads.push_back(std::thread(std::move(task), n/Number_of_threads, R));
-	}
-	//Так же нужно что бы main тоже что то делал. Но я разделил всю работу на 7 потоков (main отдыхает).
+	t.start();
+	int N_point_in_a_circle = Number_of_points_in_the_circle(n);
+	std::cout << 4.0*N_point_in_a_circle/n << '\n';
+	t.pause();
+	std::cout << "Time #1 = " << t.getter_doub() << '\n';
 
+	const auto Number_of_threads = std::thread::hardware_concurrency() != 0 ? std::thread::hardware_concurrency() : 1;
+	N_point_in_a_circle = 0;
+	std::vector<std::thread> threads (Number_of_threads);
+	std::vector < std::future < int > > futures(Number_of_threads);
+	t.start();
+	for (auto i = 0; i < Number_of_threads; ++i)
+	{
+		std::packaged_task<int(int)> task{Number_of_points_in_the_circle};
+		futures[i] = task.get_future();
+		threads[i] = std::thread(std::move(task), n/Number_of_threads);
+	}
 	for (auto i = 0; i < Number_of_threads; ++i)
 	{
 		N_point_in_a_circle += futures[i].get();
 		threads[i].join();
 	}
-
-	std::cout << 4 * static_cast<double>(N_point_in_a_circle) / n << '\n' << '\n' << '\n';
+	std::cout << 4.0 * N_point_in_a_circle / n << '\n';
+	t.pause();
+	std::cout << "Time #2 = " << t.getter_doub() << '\n';
 	return 0;
 }
