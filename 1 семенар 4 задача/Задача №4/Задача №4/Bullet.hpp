@@ -1,13 +1,14 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Baza.hpp"
 #include <cmath>
-class Fire : public Baza
+#include "Baza.hpp"
+
+class Bullet : public Baza
 {
 public:
-    Fire(
+    explicit Bullet(
         Animation& anim, float x, float y, float angle = 0.0f,
-        float radius = 1.0f) : Baza("bullet", anim, x, y, angle, radius) {}
+        float radius = 1.0f) : Baza(Entity::Bullet, anim, x, y, angle, radius) {}
 
 private:
     void update_impl() override
