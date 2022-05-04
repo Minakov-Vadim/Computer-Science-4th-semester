@@ -1,9 +1,9 @@
 #pragma once
 #include "Animation.hpp"
 #include "Asteroids.hpp"
-#include "Fire.hpp"
-#include "Detonation.hpp"
-#include "Players.hpp"
+#include "Bullet.hpp"
+#include "Explosion.hpp"
+#include "Player.hpp"
 
 #include <iostream>
 #include <memory>
@@ -12,11 +12,11 @@
 class Game
 {
 public:
-    Game() : app(sf::VideoMode(m_rock.W, m_rock.H), title)
+    explicit Game() : app(sf::VideoMode(m_rock.W, m_rock.H), title)
     {
+        load_visuals();
         init_app();
         init_texts();
-        load_visuals();
     }
 
     void run()
@@ -28,10 +28,13 @@ public:
 private:
     void init_game()
     {
+        auto seed = 0;
+        std::mt19937 engine(seed);
+        std::uniform_int_distribution<int> uid(0, 10000);
         for (auto i = 0; i < initial_asteroids; ++i)
         {
             entities.push_back(std::make_shared<Asteroids>(
-                m_rock, rand() % m_rock.W, rand() % m_rock.H, rand() % 360, 25));
+                m_rock, uid(engine) % m_rock.W, uid(engine) % m_rock.H, uid(engine) % 360, 25));
         }
 
         p = std::make_shared<Players>(m_player, 200, 200, 0, 20);
@@ -46,7 +49,7 @@ private:
         app.setFramerateLimit(60);
     }
 
-    void init_texts()
+    void init_texts() noexcept
     {
         text.setCharacterSize(character_size);
         text.setFillColor(sf::Color::Red);
@@ -84,7 +87,7 @@ private:
         }
     }
 
-    void adjust_position()
+    void adjust_position() noexcept
     {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
             p->rotate_by_deg(3);
@@ -97,11 +100,15 @@ private:
 
     void process_collisions()
     {
+        auto seed = 0;
+        std::mt19937 engine(seed);
+        std::uniform_int_distribution<int> uid(0, 10000);
+
         for (const auto& a : entities)
         {
             for (const auto& b : entities)
             {
-                if (a->name() == "asteroid" && b->name() == "bullet"
+                if (a->name() == Entity::Asteroid && b->name() == Entity::Bullet
                     && Baza::collide(*a, *b))
                 {
                     a->die();
@@ -109,19 +116,19 @@ private:
 
                     for (auto i = 0; i < 2; i++)
                     {
-                        if (a->radius() == 15)
+                        if (a->radius() == size)
                         {
                             continue;
                         }
                         auto e = std::make_shared<Asteroids>(
-                            m_small_rock, a->x(), a->y(), rand() % 360, 15);
+                            m_small_rock, a->x(), a->y(), uid(engine) % 360, size);
                         entities.push_back(e);
                     }
 
                     p->inc_score();
                 }
 
-                if (a->name() == "player" && b->name() == "asteroid"
+                if (a->name() == Entity::Player && b->name() == Entity::Asteroid
                     && Baza::collide(*a, *b))
                 {
                     b->die();
@@ -154,7 +161,7 @@ private:
     {
         for (const auto& e : entities)
         {
-            if (e->name() == "explosion")
+            if (e->name() == Entity::Explosion)
             {
                 if (e->anim().is_end())
                 {
@@ -168,28 +175,22 @@ private:
     {
         for (auto it = std::begin(entities); it != std::end(entities);)
         {
-            auto& e = *it;
-
-            e->update();
-
-            if (!e->is_alive())
-            {
-                it = entities.erase(it);
-            }
-            else
-            {
-                std::advance(it, 1);
-            }
+            (*it)->update();
+            (*it)->is_alive() ? it++ : it = entities.erase(it);
         }
     }
 
     void spawn_new_asteroids()
 
     {
-        if (!(rand() % 150))
+        auto seed = 0;
+        std::mt19937 engine(seed);
+        std::uniform_int_distribution<int> uid(0, 10000);
+
+        if (!(uid(engine) % 150))
         {
             auto a = std::make_shared<Asteroids>(
-                m_rock, 0, rand() % m_rock.H, rand() % 360, 25);
+                m_rock, 0, uid(engine) % m_rock.H, uid(engine) % 360, 25);
             entities.push_back(a);
         }
     }
