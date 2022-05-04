@@ -1,13 +1,14 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Baza.hpp"
 #include <cmath>
+#include "Baza.hpp"
+
 class Players : public Baza
 {
 public:
-    Players(
+    explicit Players(
         Animation& anim, float x, float y, float angle = 0.0f,
-        float radius = 1.0f) : Baza("player", anim, x, y, angle, radius) {}
+        float radius = 1.0f) : Baza(Entity::Player, anim, x, y, angle, radius) {}
 
     void respawn()
     {
@@ -18,28 +19,35 @@ public:
         --m_lives;
     }
 
-    bool has_lives() const
+    const bool has_lives() const noexcept
     {
         return m_lives > 0;
     }
-    void inc_score()
+
+    void inc_score() noexcept
     {
         ++m_score;
     }
-    void set_hit(bool enable)
+
+    void set_hit(bool enable) noexcept
     {
         m_hit = enable;
     }
-    bool is_hit() const
+
+    const bool is_hit() const noexcept
     {
         return m_hit;
     }
-    int lives() const { return m_lives; }
-    int score() const { return m_score; }
+
+    const int lives() const noexcept { return m_lives; }
+    const int score() const noexcept { return m_score; }
+
 private:
     const int initial_lives = 3;
+
     const float max_speed = 15.0f;
     const float motion_slowdown_coefficient = 0.99f;
+
     void update_impl() override
     {
         if (m_hit)
@@ -52,6 +60,7 @@ private:
             m_dx *= motion_slowdown_coefficient;
             m_dy *= motion_slowdown_coefficient;
         }
+
         float speed = std::sqrt(m_dx * m_dx + m_dy * m_dy);
         if (speed > max_speed)
         {
@@ -62,6 +71,7 @@ private:
         move();
         wrap();
     }
+
     bool m_hit = false;
     int m_lives = initial_lives;
     int m_score = 0;
