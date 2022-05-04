@@ -17,7 +17,7 @@ public:
         }
 
         m_sprite.setTexture(t);
-        m_sprite.setOrigin(static_cast<float>(w) / 2, static_cast<float>(h) / 2);
+        m_sprite.setOrigin(w * 1.0f / 2, 1.0f * h) / 2);
         m_sprite.setTextureRect(m_frames[0]);
     }
 
@@ -25,7 +25,7 @@ public:
     {
         m_frame += m_speed;
 
-        auto n = static_cast<float>(m_frames.size());
+        auto n = 1.0f * m_frames.size();
         if (m_frame >= n)
         {
             m_frame -= n;
@@ -37,12 +37,12 @@ public:
         }
     }
 
-    bool is_end() const
+    const bool is_end() const noexcept
     {
-        return m_frame + m_speed >= static_cast<float>(m_frames.size());
+        return m_frame + m_speed >= 1.0f * m_frames.size();
     }
 
-    sf::Sprite& sprite() { return m_sprite; }
+    const sf::Sprite& sprite() const { return m_sprite; }
 
 public:
     static inline const auto W = sf::VideoMode::getDesktopMode().width;
@@ -53,7 +53,6 @@ public:
 private:
     float m_frame{ 0.0 };
     float m_speed{ 0.0 };
-    std::vector< sf::Rect<int> > m_frames;
+    std::vector< sf::IntRect > m_frames;
     sf::Sprite m_sprite;
 };
-
