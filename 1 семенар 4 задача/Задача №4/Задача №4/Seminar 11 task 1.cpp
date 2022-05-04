@@ -1,7 +1,9 @@
 #include "Game.hpp"
+
 int main()
 {
-	auto game = Asteroids::Game();
+	Asteroids::Game game;
 	game.run();
+
 	return 0;
 }
