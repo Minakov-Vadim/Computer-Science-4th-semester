@@ -1,0 +1,78 @@
+#include <iostream>
+#include <boost/asio.hpp>
+
+class Client
+{
+public:
+    explicit Client(std::string& nickname) :
+        m_nickname(std::move(nickname)),
+        m_endpoint(
+            boost::asio::ip::address::from_string(server_ip_address),
+            server_port),
+        m_socket(m_ios, m_endpoint.protocol())
+    {
+        m_socket.connect(m_endpoint);
+    }
+
+    void send_message(const std::string& message_text)
+    {
+        std::string message = nickname_ + ": " + message_text;
+        boost::asio::write(m_socket, boost::asio::buffer(message));
+    }
+
+    void shutdown()
+    {
+        m_socket.shutdown(boost::asio::socket_base::shutdown_both);
+        m_socket.close();
+    }
+
+private:
+    static const std::string server_ip_address = "192.168.0.113";
+    static const std::size_t server_port = 1234;
+
+    std::string m_nickname;
+    boost::asio::ip::tcp::endpoint m_endpoint;
+    boost::asio::ip::tcp::socket m_socket;
+    boost::asio::io_service m_ios;
+};
+
+int main()
+{
+    std::cout << "Enter your nickname please: ";
+    std::string nickname;
+    std::getline(std::cin, nickname);
+
+    try
+    {
+        Client client(nickname);
+
+        while (true)
+        {
+            std::string message;
+            std::getline(std::cin, message);
+
+            try
+            {
+                if (message == "/exit")
+                {
+                    client.shutdown();
+                    break;
+                }
+
+                client.send_message(message + '\n');
+            }
+            catch (const boost::system::system_error& err)
+            {
+                std::cerr << "Error trying to send message: " << err.what()
+                    << std::endl;
+            }
+        }
+    }
+    catch (const boost::system::system_error& err)
+    {
+        std::cerr << "Error trying to create client" << err.what() << std::endl;
+        return 1;
+    }
+
+    return 0;
+}
