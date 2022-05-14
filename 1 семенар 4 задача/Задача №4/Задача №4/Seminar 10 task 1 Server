@@ -1,0 +1,81 @@
+#include <iostream>
+#include <boost/asio.hpp>
+
+class Server
+{
+public:
+    Server() :
+        m_endpoint(
+            boost::asio::ip::address::from_string(server_ip_address),
+            server_port),
+        m_acceptor(m_ios, m_endpoint.protocol()),
+        m_client_socket(m_ios)
+    {
+        acceptor.bind(endpoint);
+        acceptor.listen();
+    }
+
+    void accept_connection()
+    {
+        m_acceptor.accept(m_client_socket);
+    }
+
+    std::string get_message()
+    {
+        const char delimiter = '\n';
+
+        boost::asio::streambuf message_buffer;
+        boost::asio::read_until(
+            m_client_socket, message_buffer, delimiter);
+
+        std::string message;
+        std::istream is(&message_buffer);
+        std::getline(is, message);
+
+        return message;
+    }
+
+private:
+    static const std::string server_ip_address = "192.168.0.113";
+    static const std::size_t server_port = 1234;
+
+    boost::asio::ip::tcp::socket m_client_socket;
+    boost::asio::ip::tcp::endpoint m_endpoint;
+    boost::asio::ip::tcp::acceptor m_acceptor;
+    boost::asio::io_service m_ios;
+};
+
+int main()
+{
+    try
+    {
+        Server server;
+        server.accept_connection();
+        std::cout << "Connection accepted!" << std::endl;
+
+        while (true)
+        {
+            try
+            {
+                auto message = server.get_message();
+                std::cout << message << std::endl;
+            }
+            catch (const boost::system::system_error& err)
+            {
+                if (err.code() == boost::asio::error::eof)
+                {
+                    std::cout << "Exiting" << std::endl;
+                    return 0;
+                }
+
+                std::cerr << "Error trying to get client message" << err.what() << std::endl;
+                return 1;
+            }
+        }
+    }
+    catch (const boost::system::system_error& err)
+    {
+        std::cerr << "Error trying to create server: " << err.what() << std::endl;
+        return 1;
+    }
+}
